@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fastrac Solar Pricing Calculator</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #1A2A44;
+            color: #fff;
+            position: relative;
+        }
+        .calculator {
+            background: #2E4057;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.3);
+        }
+        h1 {
+            text-align: center;
+            color: #F28C38;
+        }
+        .input-group, .output-group {
+            margin: 15px 0;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        input, select {
+            width: 100%;
+            padding: 8px;
+            margin-bottom: 10px;
+            border: 1px solid #4A6280;
+            border-radius: 4px;
+            background-color: #34495E;
+            color: #fff;
+        }
+        button {
+            background-color: #F28C38;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            width: 100%;
+        }
+        button:hover {
+            background-color: #E67E22;
+        }
+        .output-group {
+            display: none;
+        }
+        .output-group.show {
+            display: block;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+        th, td {
+            border: 1px solid #4A6280;
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background-color: #34495E;
+        }
+    </style>
+</head>
+<body>
+    <div class="calculator">
+        <h1>Fastrac Solar Pricing Calculator</h1>
+        <div class="input-group">
+            <label for="salesPrice">Sales Price (PPW):</label>
+            <input type="number" id="salesPrice" step="0.01" value="">
+            
+            <label for="redline">Redline:</label>
+            <input type="number" id="redline" step="0.01" value="">
+            
+            <label for="panels">Number of 410W Panels:</label>
+              <select id="panels">
+                <option value="18">18 </option>
+                <option value="19">19 </option>
+                <option value="20">20 </option>
+                <option value="21">21 </option>
+                <option value="22">22 </option>
+                <option value="23">23 </option>
+                <option value="24">24 </option>
+                <option value="25">25 </option>
+                <option value="26">26 </option>
+                <option value="27">27 </option>
+                <option value="28">28 </option>
+                <option value="29">29 </option>
+                <option value="30">30 </option>
+                <option value="31">31 </option>
+                <option value="32">32 </option>
+                <option value="33">33 </option>
+                <option value="34">34 </option>
+                <option value="35">35 </option>
+                <option value="36">36 </option>
+                <option value="37">37 </option>
+                <option value="38">38 </option>
+                <option value="39">39 </option>
+                <option value="40">40 </option>
+                <option value="41">41 </option>
+                <option value="42">42 </option>
+                <option value="43">43 </option>
+                <option value="44">44 </option>
+                <option value="45">45 </option>
+                <option value="46">46 </option>
+                <option value="47">47 </option>
+                <option value="48">48 </option>
+            </select>
+            
+            <label for="powerWalls">Number of PowerWalls:</label>
+            <select id="powerWalls">
+                <option value="1">1 PowerWall</option>
+                <option value="2">2 PowerWalls</option>
+                <option value="3">3 PowerWalls</option>
+            </select>
+            
+            <label for="totalAdderCost">Total Adder Cost:</label>
+            <input type="number" id="totalAdderCost" step="0.01" value="0.00">
+            
+            <button onclick="calculate()">Calculate</button>
+        </div>
+        <div class="output-group" id="output">
+            <h2>Results</h2>
+            <table>
+                <tr>
+                    <th>Metric</th>
+                    <th>Value</th>
+                </tr>
+                <tr>
+                    <td>System Size (Watts)</td>
+                    <td id="systemSize"></td>
+                </tr>
+                <tr>
+                    <td>EPC PPW</td>
+                    <td id="epcPPW"></td>
+                </tr>
+                <tr>
+                    <td>EPC Amount</td>
+                    <td id="epcAmount"></td>
+                </tr>
+                <tr>
+                    <td>Estimated Commission After Adders</td>
+                    <td id="commissionAfterAdders"></td>
+                </tr>
+            </table>
+        </div>
+    </div>
+    <script>
+        // Pricing matrix data extracted from the CSV - Column C (1 PW), Column D (2 PW), Column E (3 PW)
+        const onePWPPW = [
+            null, // index 0
+            null, // index 1
+            { panels: 18, base: 1.90 },
+            { panels: 19, base: 1.84 },
+            { panels: 20, base: 1.79 },
+            { panels: 21, base: 1.74 },
+            { panels: 22, base: 1.70 },
+            { panels: 23, base: 1.67 },
+            { panels: 24, base: 1.63 },
+            { panels: 25, base: 1.60 },
+            { panels: 26, base: 1.57 },
+            { panels: 27, base: 1.54 },
+            { panels: 28, base: 1.52 },
+            { panels: 29, base: 1.49 },
+            { panels: 30, base: 1.47 },
+            { panels: 31, base: 1.45 },
+            { panels: 32, base: 1.43 },
+            { panels: 33, base: 1.41 },
+            { panels: 34, base: 1.39 },
+            { panels: 35, base: 1.38 },
+            { panels: 36, base: 1.36 },
+            { panels: 37, base: 1.35 },
+            { panels: 38, base: 1.33 },
+            { panels: 39, base: 1.32 },
+            { panels: 40, base: 1.31 },
+            { panels: 41, base: 1.30 },
+            { panels: 42, base: 1.29 },
+            { panels: 43, base: 1.28 },
+            { panels: 44, base: 1.27 },
+            { panels: 45, base: 1.25 },
+            { panels: 46, base: 1.25 },
+            { panels: 47, base: 1.24 },
+            { panels: 48, base: 1.23 }
+        ];
+
+        const twoPWPPW = [
+            null, // index 0
+            null, // index 1
+            { panels: 18, base: 2.98 },
+            { panels: 19, base: 2.88 },
+            { panels: 20, base: 2.77 },
+            { panels: 21, base: 2.67 },
+            { panels: 22, base: 2.59 },
+            { panels: 23, base: 2.52 },
+            { panels: 24, base: 2.44 }, 
+            { panels: 25, base: 2.39 },
+            { panels: 26, base: 2.32 },
+            { panels: 27, base: 2.27 },
+            { panels: 28, base: 2.21 },
+            { panels: 29, base: 2.17 },
+            { panels: 30, base: 2.12 },
+            { panels: 31, base: 2.08 },
+            { panels: 32, base: 2.04 },
+            { panels: 33, base: 2.01 },
+            { panels: 34, base: 1.97 },
+            { panels: 35, base: 1.94 },
+            { panels: 36, base: 1.91 },
+            { panels: 37, base: 1.88 },
+            { panels: 38, base: 1.85 },
+            { panels: 39, base: 1.83 },
+            { panels: 40, base: 1.80 },
+            { panels: 41, base: 1.78 },
+            { panels: 42, base: 1.76 },
+            { panels: 43, base: 1.73 },
+            { panels: 44, base: 1.71 },
+            { panels: 45, base: 1.69 },
+            { panels: 46, base: 1.68 },
+            { panels: 47, base: 1.65 },
+            { panels: 48, base: 1.63 }
+        ];
+
+        const threePWPPW = [
+            null, // index 0
+            null, // index 1
+            { panels: 18, base: 3.94 },
+            { panels: 19, base: 3.78 },
+            { panels: 20, base: 3.63 },
+            { panels: 21, base: 3.50 },
+            { panels: 22, base: 3.37 },
+            { panels: 23, base: 3.26 },
+            { panels: 24, base: 3.16 },
+            { panels: 25, base: 3.07 },
+            { panels: 26, base: 2.98 },
+            { panels: 27, base: 2.90 },
+            { panels: 28, base: 2.83 },
+            { panels: 29, base: 2.76 },
+            { panels: 30, base: 2.69 },
+            { panels: 31, base: 2.64 },
+            { panels: 32, base: 2.58 },
+            { panels: 33, base: 2.52 },
+            { panels: 34, base: 2.48 },
+            { panels: 35, base: 2.43 },
+            { panels: 36, base: 2.38 },
+            { panels: 37, base: 2.34 },
+            { panels: 38, base: 2.30 },
+            { panels: 39, base: 2.27 },
+            { panels: 40, base: 2.23 },
+            { panels: 41, base: 2.19 },
+            { panels: 42, base: 2.16 },
+            { panels: 43, base: 2.13 },
+            { panels: 44, base: 2.10 },
+            { panels: 45, base: 2.07 },
+            { panels: 46, base: 2.05 },
+            { panels: 47, base: 2.02 },
+            { panels: 48, base: 1.99 }
+        ];
+
+        function getBasePPW(panels, powerWalls) {
+            const data = {
+                1: onePWPPW,
+                2: twoPWPPW,
+                3: threePWPPW
+            };
+            const array = data[powerWalls];
+            const entry = array.find(e => e && e.panels === panels);
+            return entry ? entry.base : null;
+        }
+
+        function calculate() {
+            const salesPrice = parseFloat(document.getElementById('salesPrice').value);
+            const redline = parseFloat(document.getElementById('redline').value);
+            const panels = parseInt(document.getElementById('panels').value);
+            const powerWalls = parseInt(document.getElementById('powerWalls').value);
+            const totalAdderCost = parseFloat(document.getElementById('totalAdderCost').value);
+
+            if (isNaN(salesPrice) || isNaN(redline) || isNaN(panels) || isNaN(powerWalls) || isNaN(totalAdderCost)) {
+                alert('Please enter valid numbers for all inputs.');
+                return;
+            }
+         
+
+            const systemSize = panels * 410;
+            const basePPW = getBasePPW(panels, powerWalls);
+            if (basePPW === null) {
+                alert('Invalid number of panels or PowerWalls configuration.');
+                return;
+            }
+            const epcPPW = redline + basePPW; // EPC PPW = Redline + Total System Cost/Watt
+            const epcAmount = (epcPPW * systemSize).toFixed(2);
+            const commissionAfterAdders = ((salesPrice - epcPPW - (totalAdderCost / systemSize)) * systemSize).toFixed(2);
+
+            document.getElementById('systemSize').textContent = systemSize.toLocaleString();
+            document.getElementById('epcPPW').textContent = epcPPW.toFixed(2);
+            document.getElementById('epcAmount').textContent = `$${parseFloat(epcAmount).toLocaleString()}`;
+            document.getElementById('commissionAfterAdders').textContent = `$${parseFloat(commissionAfterAdders).toLocaleString()}`;
+            document.getElementById('output').classList.add('show');
+        }
+    </script>
+</body>
+</html>
